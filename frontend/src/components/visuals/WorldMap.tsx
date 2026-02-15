@@ -1,9 +1,8 @@
-import { useMemo } from "react";
 import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
 import { motion } from "framer-motion";
 
-// GeoJSON for the world map (standard low-res)
+// GeoJSON for the world map
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
 interface Site {
@@ -13,6 +12,7 @@ interface Site {
   lng: number;
   dqi: number;
   status: string;
+  patients: number;
 }
 
 interface WorldMapProps {
@@ -21,7 +21,6 @@ interface WorldMapProps {
 }
 
 export function WorldMap({ sites, onSiteClick }: WorldMapProps) {
-  // Color scale: Red (40) to Green (100)
   const colorScale = scaleLinear<string>()
     .domain([50, 80, 100])
     .range(["#ef4444", "#eab308", "#22c55e"]);
@@ -63,7 +62,7 @@ export function WorldMap({ sites, onSiteClick }: WorldMapProps) {
             onClick={() => onSiteClick(site)}
             className="cursor-pointer group"
           >
-            {/* Pulsing Effect for Critical Sites (Site 42) */}
+            {/* Pulsing Effect for Critical Sites */}
             {site.dqi < 60 && (
               <motion.circle
                 r={12}
@@ -74,24 +73,34 @@ export function WorldMap({ sites, onSiteClick }: WorldMapProps) {
               />
             )}
             
-            {/* The Dot */}
+            {/* The Actual Site Marker Dot */}
             <circle
               r={4}
               fill={colorScale(site.dqi)}
               stroke="#0f172a"
               strokeWidth={1}
-              className="transition-all duration-300 group-hover:r-6"
             />
             
-            {/* Tooltip on Hover */}
-            <text
-              textAnchor="middle"
-              y={-10}
-              style={{ fontFamily: "system-ui", fill: "white", fontSize: "10px", pointerEvents: "none" }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity font-bold shadow-black drop-shadow-md"
-            >
-              {site.name.split(" - ")[0]}
-            </text>
+            {/* FIX: Tooltip placed INSIDE the .map() loop so it has access to 'site' */}
+            <g className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              <rect
+                x="-50"
+                y="-35"
+                width="100"
+                height="25"
+                rx="4"
+                fill="#0f172a"
+                stroke="#334155"
+                strokeWidth={1}
+              />
+              <text
+                textAnchor="middle"
+                y="-18"
+                style={{ fontFamily: "system-ui", fill: "white", fontSize: "9px", fontWeight: "bold" }}
+              >
+                {site.name.split(" - ")[0]} | Patients: {site.patients}
+              </text>
+            </g>
           </Marker>
         ))}
       </ComposableMap>
